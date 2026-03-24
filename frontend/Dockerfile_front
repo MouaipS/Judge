@@ -1,0 +1,14 @@
+#--------
+# Stage 1 - Base
+#--------
+FROM node:20-alpine AS base
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+
+#----------
+# Stage 2 - Dev
+#----------
+FROM base as dev
+CMD ["npx", "vite", "--host", "0.0.0.0"]
+
