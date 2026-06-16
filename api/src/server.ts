@@ -3,6 +3,7 @@ import "dotenv/config";
 import { pool } from "./db.js";
 import { authRouter } from "./routes/auth.js";
 import { reviewsRouter } from "./routes/reviews.js";
+import cors from "cors";
 
 const app = express();
 app.use(express.json());
@@ -22,6 +23,9 @@ const port = process.env.PORT ?? 3000;
 app.listen(port, () => {
   console.log(`API en écoute sur http://localhost:${port}`);
 });
+//accept for cross-origin requests (dev_)
+app.use(cors());
+app.use(express.json());
 
 app.use("/api/auth", authRouter);
 app.use("/api/reviews", reviewsRouter);
