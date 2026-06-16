@@ -2,6 +2,7 @@ import { Router } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { pool } from "../db.js";
+import { requireAuth } from "../middleware/auth.js";
 
 export const authRouter = Router();
 
@@ -40,8 +41,6 @@ authRouter.post("/register", async (req, res) => {
   }
 });
 
-
-
 authRouter.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -78,3 +77,12 @@ authRouter.post("/login", async (req, res) => {
     res.status(500).json({ error: "erreur serveur" });
   }
 });
+
+authRouter.get("/me", requireAuth, async(req, res) =>{
+  const result = await pool.query(
+    `SELECT id, username, email, display_name, bio, avatar_url, created_at
+     FROM users WHERE id = $1`,
+    [req.userId]
+  );
+  res.json({ user: result.rows[0] });
+})
