@@ -1,6 +1,7 @@
 import express from "express";
 import "dotenv/config";
 import { pool } from "./db.js";
+import { authRouter } from "./routes/auth.js";
 
 const app = express();
 app.use(express.json());
@@ -20,3 +21,5 @@ const port = process.env.PORT ?? 3000;
 app.listen(port, () => {
   console.log(`API en écoute sur http://localhost:${port}`);
 });
+
+app.use("/api/auth", authRouter);
