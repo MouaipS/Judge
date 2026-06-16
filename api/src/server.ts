@@ -2,6 +2,7 @@ import express from "express";
 import "dotenv/config";
 import { pool } from "./db.js";
 import { authRouter } from "./routes/auth.js";
+import { reviewsRouter } from "./routes/reviews.js";
 
 const app = express();
 app.use(express.json());
@@ -23,3 +24,4 @@ app.listen(port, () => {
 });
 
 app.use("/api/auth", authRouter);
+app.use("/api/reviews", reviewsRouter);
