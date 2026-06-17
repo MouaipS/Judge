@@ -9,21 +9,28 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    if (password.length < 8) {
-      setError("Mot de passe trop court (8 caractères minimum)");
-      return;
-    }
-    try {
-      await register(username, email, password);
-      navigate("/"); // succès → on est connecté, retour à la une
-    } catch (err: any) {
-      setError(err.message);
-    }
+async function handleSubmit(e: React.FormEvent) {
+  e.preventDefault();
+  if (loading) return;
+  setError(null);
+
+  if (password.length < 8) {
+    setError("Mot de passe trop court (8 caractères minimum)");
+    return;
   }
+
+  setLoading(true);
+  try {
+    await register(username, email, password);
+    navigate("/");
+  } catch (err: any) {
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+}
 
   return (
     <div className="mx-auto max-w-sm px-6 py-16 font-sans">

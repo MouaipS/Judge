@@ -4,6 +4,8 @@ import jwt from "jsonwebtoken";
 import { pool } from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
 import crypto from "node:crypto";
+import { sendPasswordResetEmail } from "../mailer";
+import { todo } from "node:test";
 
 export const authRouter = Router();
 
@@ -91,6 +93,7 @@ authRouter.get("/me", requireAuth, async(req, res) =>{
 
 // ----->ROUTE Mot de passe oublie
 authRouter.post("/forgot-password", async (req, res) => {
+  console.log(`➡️  /forgot-password appelé pour ${req.body?.email}`);
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: "email requis" });
 
@@ -108,13 +111,9 @@ authRouter.post("/forgot-password", async (req, res) => {
          VALUES ($1, $2, $3)`,
         [tokenHash, user.id, expiresAt]
       );
-
       const resetUrl = `${process.env.WEB_URL ?? "http://localhost:5173"}/reset-password?token=${rawToken}`;
-      // TODO : brancher un vrai service d'email (Resend, SendGrid, nodemailer…).
-      // En dev, on logue simplement le lien dans la console :
-      console.log(`Lien de réinitialisation pour ${email} : ${resetUrl}`);
+      await sendPasswordResetEmail(email, resetUrl);    
     }
-
     // Réponse identique que le compte existe ou non (anti-énumération d'emails)
     res.json({ message: "Si un compte existe, un email a été envoyé." });
   } catch (err) {
