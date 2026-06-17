@@ -28,3 +28,24 @@ export async function fetchMovie(tmdbId: number): Promise<TmdbMovie | null> {
     poster_path: data.poster_path,
   };
 }
+
+export async function searchMovies(query: String) : Promise<TmdbMovie[]> {
+  const res = await fetch(
+    `${TMDB_BASE}/search/movie?query=${encodeURIComponent(query)}&language=fr-FR`, 
+    {
+      headers: {
+        Authorization: `Bearer ${process.env.TMDB_READ_TOKEN}`,
+        Accept: "application/json",
+      },
+    }
+  );
+  if(!res.ok) throw new Error('TMDB error: ${res.status');
+
+  const data = await res.json();
+  return data.results.map((m: any) => ({
+    tmdb_id: m.id,
+    title: m.title,
+    release_year: m.release_date ? Number(m.release_date.slice(0,4)) : null,
+    poster_path: m.poster_path,
+  }));
+}
