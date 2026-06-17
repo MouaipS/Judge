@@ -114,20 +114,13 @@ export default function NewReview() {
           </p>
           <input
             type="text"
-            placeholder="Titre de l'article"
+            placeholder="Headline"
             value={headline}
             onChange={(e) => setHeadline(e.target.value)}
             className="rounded-md border border-neutral-300 px-3 py-2 font-serif text-lg"
           />
-          <input
-            type="text"
-            placeholder="Chapô (accroche)"
-            value={standfirst}
-            onChange={(e) => setStandfirst(e.target.value)}
-            className="rounded-md border border-neutral-300 px-3 py-2"
-          />
           <textarea
-            placeholder="Votre critique (markdown supporté)…"
+            placeholder="La critique"
             value={body}
             onChange={(e) => setBody(e.target.value)}
             rows={12}
@@ -135,10 +128,10 @@ export default function NewReview() {
           />
           <input
             type="number"
-            step="0.1"
+            step="0.5"
             min="0"
-            max="10"
-            placeholder="Note /10 (optionnel)"
+            max="5"
+            placeholder="Note /5"
             value={rating}
             onChange={(e) => setRating(e.target.value)}
             className="w-40 rounded-md border border-neutral-300 px-3 py-2"
