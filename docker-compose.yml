@@ -15,7 +15,7 @@ services :
       PORT: 3001
       DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
       JWT_SECRET: ${JWT_SECRET}
-      TMDB_API_KEY: ${TMDB_API_KEY}
+      TMDB_READ_TOKEN: ${TMDB_READ_TOKEN}
       FRONTEND_URL: http://localhost:5173
     ports:
     - "3001:3001"
@@ -58,6 +58,7 @@ services :
       - "5432:5432"
     volumes:
       - judge_pgdata:/var/lib/postgresql/data
+      - ./api/migrations:/docker-entrypoint-initdb.d 
 
 volumes:
   judge_pgdata:

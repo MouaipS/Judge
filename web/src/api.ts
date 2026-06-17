@@ -83,3 +83,45 @@ export async function getMe(token: string): Promise<User> {
   const data = await res.json();
   return data.user;
 }
+
+////////////////////////////// Recherche et publication 
+
+export interface MovieResult {
+  tmdb_id: number;
+  title: string;
+  release_year: number | null;
+  poster_path: string | null;
+}
+
+export async function searchMovies(query: string): Promise<MovieResult[]> {
+  const res = await fetch(`${API_URL}/api/movies/search?q=${encodeURIComponent(query)}`);
+  if (!res.ok) throw new Error("échec de la recherche");
+  const data = await res.json();
+  return data.movies;
+}
+
+export interface NewReviewInput {
+  tmdb_id: number;
+  headline: string;
+  standfirst: string;
+  body: string;
+  rating: number | null;
+  publish: boolean;
+}
+
+export async function createReview(input: NewReviewInput): Promise<{ id: string }> {
+  const token = getToken();
+  if (!token) throw new Error("Non connecté");
+
+  const res = await fetch(`${API_URL}/api/reviews`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) throw new Error("échec de la publication");
+  const data = await res.json();
+  return data.review;
+}
