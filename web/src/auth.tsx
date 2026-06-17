@@ -1,10 +1,11 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { loginRequest, getMe, getToken, setToken, clearToken, type User } from "./api";
+import { loginRequest, registerRequest, getMe, getToken, setToken, clearToken, type User } from "./api";
 
 interface AuthState {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  register: (username: string, email: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -33,13 +34,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(user);
   }
 
+  async function register(username: string, email: string, password: string) {
+    const { user, token } = await registerRequest(username, email, password);
+    setToken(token);
+    setUser(user);
+  }
+
   function logout() {
     clearToken();
     setUser(null);
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login,register, logout }}>
       {children}
     </AuthContext.Provider>
   );

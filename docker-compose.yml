@@ -1,49 +1,4 @@
 services :
-
-#-----------------
-# BACKEND - Fastify
-#-----------------
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile_back #on precise le nom du dockerfile au cas où
-      target: dev #pour executer une partie specifique du dockerfile
-    container_name: judge_backend
-    restart: unless-stopped
-    environment:
-      NODE_ENV: development
-      PORT: 3001
-      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
-      JWT_SECRET: ${JWT_SECRET}
-      TMDB_READ_TOKEN: ${TMDB_READ_TOKEN}
-      FRONTEND_URL: http://localhost:5173
-    ports:
-    - "3001:3001"
-    depends_on:
-      db:
-        condition: service_healthy
-    volumes:
-      - ./backend/src:/app/src
-
-#-----------------
-# FRONTEND - React + Vite
-#-----------------
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile_front
-      target: dev
-    container_name: judge_frontend
-    restart : unless-stopped
-    environment:
-      VITE_API_URL: http://localhost:3001
-    ports:
-      - "5173:5173"
-    depends_on:
-      - backend
-    volumes:
-      - ./frontend/src:/app/src #hot-reload
-
 #-----------------
 # DB - Postgresql
 #-----------------

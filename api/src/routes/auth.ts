@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { pool } from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
+import crypto from "node:crypto";
 
 export const authRouter = Router();
 
@@ -86,3 +87,76 @@ authRouter.get("/me", requireAuth, async(req, res) =>{
   );
   res.json({ user: result.rows[0] });
 })
+
+
+// ----->ROUTE Mot de passe oublie
+authRouter.post("/forgot-password", async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: "email requis" });
+
+  try {
+    const result = await pool.query(`SELECT id FROM users WHERE email = $1`, [email]);
+    const user = result.rows[0];
+
+    if (user) {
+      const rawToken = crypto.randomBytes(32).toString("hex");
+      const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+      const expiresAt = new Date(Date.now() + 1000 * 60 * 60); // 1 heure
+
+      await pool.query(
+        `INSERT INTO password_reset_tokens (token_hash, user_id, expires_at)
+         VALUES ($1, $2, $3)`,
+        [tokenHash, user.id, expiresAt]
+      );
+
+      const resetUrl = `${process.env.WEB_URL ?? "http://localhost:5173"}/reset-password?token=${rawToken}`;
+      // TODO : brancher un vrai service d'email (Resend, SendGrid, nodemailer…).
+      // En dev, on logue simplement le lien dans la console :
+      console.log(`Lien de réinitialisation pour ${email} : ${resetUrl}`);
+    }
+
+    // Réponse identique que le compte existe ou non (anti-énumération d'emails)
+    res.json({ message: "Si un compte existe, un email a été envoyé." });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "erreur serveur" });
+  }
+});
+
+
+// ----->ROUTE Pour reset le mot de passe 
+ authRouter.post("/reset-password", async (req, res) => {
+  const { token, password } = req.body;
+  if (!token || !password) {
+    return res.status(400).json({ error: "token et password requis" });
+  }
+  if (password.length < 8) {
+    return res.status(400).json({ error: "mot de passe trop court (8 min)" });
+  }
+
+  try {
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+    const result = await pool.query(
+      `SELECT user_id FROM password_reset_tokens
+       WHERE token_hash = $1 AND used_at IS NULL AND expires_at > now()`,
+      [tokenHash]
+    );
+    const row = result.rows[0];
+    if (!row) return res.status(400).json({ error: "lien invalide ou expiré" });
+
+    const password_hash = await bcrypt.hash(password, 12);
+    await pool.query(`UPDATE users SET password_hash = $1 WHERE id = $2`, [
+      password_hash,
+      row.user_id,
+    ]);
+    await pool.query(
+      `UPDATE password_reset_tokens SET used_at = now() WHERE token_hash = $1`,
+      [tokenHash]
+    );
+
+    res.json({ message: "Mot de passe mis à jour." });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "erreur serveur" });
+  }
+});
