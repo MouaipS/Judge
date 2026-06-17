@@ -79,9 +79,13 @@ export default function Home() {
                 className="mb-4 aspect-video w-full rounded-lg object-cover"
               />
             )}
-            <span className="text-xs font-medium uppercase tracking-wider text-blue-700">
-              Édito du jour
-            </span>
+            <Link
+              to={`/film/${lead.tmdb_id}`}
+              className="text-xs font-medium uppercase tracking-wider text-blue-700 hover:underline"
+            >
+              {lead.movie_title}
+              {lead.release_year && ` (${lead.release_year})`}
+            </Link>
             <h2 className="mt-1 font-serif text-4xl leading-tight">
               <Link to={`/reviews/${lead.id}`} className="hover:underline">
                 {lead.headline}

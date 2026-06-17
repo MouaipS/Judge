@@ -7,8 +7,8 @@ import NewReview from "./pages/NewReview";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import FilmPage from "./pages/FilmPage";
 
-// dans <Routes> :
 
 
 export default function App() {
@@ -25,6 +25,7 @@ export default function App() {
 
           <Route path="/reviews/:id" element={<Article />} />
           <Route path="/new" element={<NewReview />} />
+          <Route path="/film/:tmdbId" element={<FilmPage />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

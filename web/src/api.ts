@@ -41,7 +41,7 @@ export async function getReview(id: string): Promise<ReviewFull> {
   return data.review;
 }
 
-///////////////////Pour se Login
+// -----> Pour se loger 
 
 const TOKEN_KEY = "judge_token";
 
@@ -168,3 +168,36 @@ export async function resetPassword(token: string, password: string): Promise<vo
     throw new Error(data?.error ?? "Échec de la réinitialisation");
   }
 } 
+
+// -----> Helpers et types pour les fiches films avec reviews
+
+export interface MovieReviewSummary {
+  id: string;
+  headline: string;
+  standfirst: string | null;
+  cover_url: string | null;
+  rating: number | null;
+  published_at: string;
+  author_id: string;
+  author_username: string;
+  author_name: string | null;
+}
+
+export interface MoviePage {
+  movie: {
+    tmdb_id: number;
+    title: string;
+    release_year: number | null;
+    poster_path: string | null;
+    average_rating: number | null;
+    rating_count: number;
+    review_count: number;
+  };
+  reviews: MovieReviewSummary[];
+}
+
+export async function getMovie(tmdbId: number | string): Promise<MoviePage> {
+  const res = await fetch(`${API_URL}/api/movies/${tmdbId}`);
+  if (!res.ok) throw new Error("film introuvable");
+  return res.json();
+}

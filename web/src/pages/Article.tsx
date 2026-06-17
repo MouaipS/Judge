@@ -33,8 +33,13 @@ export default function Article() {
       </Link>
 
       <p className="mt-6 text-sm uppercase tracking-wider text-neutral-500">
-        {review.movie_title}
-        {review.release_year && ` (${review.release_year})`}
+        <Link
+          to={`/film/${review.tmdb_id}`}
+          className="hover:text-neutral-900 hover:underline"
+        >
+          {review.movie_title}
+          {review.release_year && ` (${review.release_year})`}
+        </Link>
       </p>
       <h1 className="mt-2 font-serif text-4xl leading-tight">{review.headline}</h1>
       {review.standfirst && (
