@@ -4,6 +4,12 @@ import { AuthProvider } from "./auth";
 import Article from "./pages/Article";
 import Login from "./pages/Login";
 import NewReview from "./pages/NewReview";
+import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+
+// dans <Routes> :
+
 
 export default function App() {
   return (
@@ -11,8 +17,13 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/reviews/:id" element={<Article />} />
+
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+
+          <Route path="/reviews/:id" element={<Article />} />
           <Route path="/new" element={<NewReview />} />
         </Routes>
       </BrowserRouter>
