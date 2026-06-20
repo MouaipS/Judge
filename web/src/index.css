@@ -1,14 +1,140 @@
 @import "tailwindcss";
-@import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
-@theme {
-  --font-serif: "DM Serif Display", Georgia, serif;
-  --font-sans: "Inter", system-ui, sans-serif;
+/* ----------------------------------------------------------------
+   Polices auto-hébergées
+   Place tous les fichiers dans  web/public/fonts/
+   (servis à la racine, d'où les chemins  /fonts/...)
+   ---------------------------------------------------------------- */
+
+/* AA Triple — display à triple trait */
+@font-face {
+  font-family: "AA Triple";
+  src: url("/fonts/AA Triple.otf") format("opentype");
+  font-weight: 400;
+  font-display: swap;
 }
 
-@theme {
-  --font-serif: "DM Serif Display", Georgia, serif;
-  --font-sans: "Inter", system-ui, sans-serif;
+/* Ferron — grotesque, une largeur par fichier */
+@font-face {
+  font-family: "Ferron";
+  src: url("/fonts/Ferron-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Ferron Condensed";
+  src: url("/fonts/Ferron-Condensed.otf") format("opentype");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Ferron ExtraCondensed";
+  src: url("/fonts/Ferron-ExtraCondensed.otf") format("opentype");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Ferron UltraCondensed";
+  src: url("/fonts/Ferron-UltraCondensed.otf") format("opentype");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Ferron SemiCondensed";
+  src: url("/fonts/Ferron-SemiCondensed.otf") format("opentype");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Ferron SemiExpanded";
+  src: url("/fonts/Ferron-SemiExpanded.otf") format("opentype");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Ferron Expanded";
+  src: url("/fonts/Ferron-Expanded.otf") format("opentype");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Ferron ExtraExpanded";
+  src: url("/fonts/Ferron-ExtraExpanded.otf") format("opentype");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Ferron UltraExpanded";
+  src: url("/fonts/Ferron-UltraExpanded.otf") format("opentype");
+  font-weight: 400;
+  font-display: swap;
 }
 
+/* Golden Goose — capitales, police variable (axe de graisse) */
+@font-face {
+  font-family: "Golden Goose";
+  src: url("/fonts/GoldenGooseUppercase-VariableVF.ttf") format("truetype");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+/* Marous */
+@font-face {
+  font-family: "Marous";
+  src: url("/fonts/Marous.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
+/* Midgame — otf en priorité, ttf en repli */
+@font-face {
+  font-family: "Midgame";
+  src: url("/fonts/Midgame Std.otf") format("opentype"),
+       url("/fonts/Midgame Std.ttf") format("truetype");
+  font-weight: 400;
+  font-display: swap;
+}
+
+/* Mirano — Light + son italique sous la même famille */
+@font-face {
+  font-family: "Mirano";
+  src: url("/fonts/MiranoExtendedFreebie-Light.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Mirano";
+  src: url("/fonts/MiranoExtendedFreebie-LightItalic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* ----------------------------------------------------------------
+   Tokens de thème → utilitaires Tailwind (font-xxx)
+   ---------------------------------------------------------------- */
+@theme {
+  /* existantes */
+  --font-serif: "DM Serif Display", Georgia, serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+
+  /* nouvelles */
+  --font-aa-triple: "AA Triple", sans-serif;
+
+  --font-ferron: "Ferron", sans-serif;
+  --font-ferron-condensed: "Ferron Condensed", sans-serif;
+  --font-ferron-xcondensed: "Ferron ExtraCondensed", sans-serif;
+  --font-ferron-ucondensed: "Ferron UltraCondensed", sans-serif;
+  --font-ferron-scondensed: "Ferron SemiCondensed", sans-serif;
+  --font-ferron-sexpanded: "Ferron SemiExpanded", sans-serif;
+  --font-ferron-expanded: "Ferron Expanded", sans-serif;
+  --font-ferron-xexpanded: "Ferron ExtraExpanded", sans-serif;
+  --font-ferron-uexpanded: "Ferron UltraExpanded", sans-serif;
+
+  --font-golden-goose: "Golden Goose", sans-serif;
+  --font-marous: "Marous", sans-serif; 
+  --font-midgame: "Midgame", sans-serif;
+  --font-mirano: "Mirano", serif;
+}

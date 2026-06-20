@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getFeed, type ReviewSummary } from "../api";
 import { useAuth } from "../auth";
+import Navbar from "../components/Navbar";
 
 const IMG_BASE = "https://image.tmdb.org/t/p/w500";
 
@@ -22,9 +23,9 @@ export default function Home() {
   const rest = reviews.slice(1);
 
   return (
+    <>
+    <Navbar />
     <div className="mx-auto max-w-5xl px-6 py-8 font-sans text-neutral-900">
-      {/* Le header est TOUJOURS rendu, quel que soit l'état du feed */}
-      <header className="flex items-end justify-between border-b-2 border-neutral-900 pb-3">
         <div>
           <Link to="/">
             <h1 className="font-serif text-5xl leading-none">Judge</h1>
@@ -48,7 +49,6 @@ export default function Home() {
             </Link>
           )}
         </div>
-      </header>
 
       {/* Le contenu en dessous dépend de l'état */}
       {loading && <p className="mt-8 text-neutral-500">Chargement…</p>}
@@ -119,5 +119,6 @@ export default function Home() {
         </article>
       )}
     </div>
+    </>
   );
 }
