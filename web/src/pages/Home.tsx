@@ -91,7 +91,9 @@ export default function Home() {
               <p className="mt-2 text-lg text-neutral-600">{lead.standfirst}</p>
             )}
             <p className="mt-3 text-sm text-neutral-500">
+              <Link to={`/u/${lead.author_username}`} className="hover:underline">
               {lead.author_name ?? lead.author_username}
+              </Link>
               {lead.rating != null && ` · ${lead.rating}/10`}
             </p>
           </div>
@@ -109,7 +111,9 @@ export default function Home() {
                     </Link>
                   </h4>
                   <p className="text-sm text-neutral-500">
+                    <Link to={`/u/${r.author_username}`} className="hover:underline">
                     {r.author_name ?? r.author_username}
+                    </Link>
                     {r.rating != null && ` · ${r.rating}/10`}
                   </p>
                 </div>

@@ -5,6 +5,7 @@ import { authRouter } from "./routes/auth.js";
 import { reviewsRouter } from "./routes/reviews.js";
 import cors from "cors";
 import { moviesRouter } from "./routes/movie.js";
+import { usersRouter } from "./routes/users.js";
 
 const app = express();
 app.use(express.json());
@@ -31,3 +32,5 @@ app.use(express.json());
 app.use("/api/auth", authRouter);
 app.use("/api/reviews", reviewsRouter);
 app.use("/api/movies", moviesRouter);
+app.use("/api/users", usersRouter);
+

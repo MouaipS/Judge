@@ -145,6 +145,13 @@ const bubble = "rounded-full px-8 py-2.5 text-sm font-medium transition-colors";
 			          >
 			            Écrire une critique
 			          </Link>
+					  <Link
+  to="/settings"
+  onClick={() => setMenuOpen(false)}
+  className="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100"
+>
+  Éditer le profil
+</Link>
 			          <div className="my-1 border-t border-neutral-100" />
 			          <button
 			            onClick={() => {
