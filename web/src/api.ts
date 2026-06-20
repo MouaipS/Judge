@@ -168,3 +168,46 @@ export async function resetPassword(token: string, password: string): Promise<vo
     throw new Error(data?.error ?? "Échec de la réinitialisation");
   }
 } 
+
+// -----> Pour la page profile
+export interface ProfileReview extends ReviewSummary {
+  body: string;
+}
+
+export interface AuthorProfile {
+  user: {
+    username: string;
+    display_name: string | null;
+    bio: string | null;
+    avatar_url: string | null;
+    created_at: string;
+  };
+  reviews: ProfileReview[];
+  review_count: number;
+}
+
+export async function getProfile(username: string): Promise<AuthorProfile> {
+  const res = await fetch(`${API_URL}/api/users/${encodeURIComponent(username)}`);
+  if (res.status === 404) throw new Error("Utilisateur introuvable");
+  if (!res.ok) throw new Error("échec du chargement du profil");
+  return res.json();
+} 
+
+// -----> Pour changer les informations de l utilisateur 
+export async function updateProfile(input: {
+  bio: string | null;
+  avatar_url: string | null;
+}): Promise<void> {
+  const token = getToken();
+  if (!token) throw new Error("Non connecté");
+
+  const res = await fetch(`${API_URL}/api/auth/me`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) throw new Error("échec de la mise à jour du profil");
+}

@@ -79,6 +79,7 @@ authRouter.post("/login", async (req, res) => {
   }
 });
 
+// TODO(me): Pour recuper les infos du user
 authRouter.get("/me", requireAuth, async(req, res) =>{
   const result = await pool.query(
     `SELECT id, username, email, display_name, bio, avatar_url, created_at
@@ -87,6 +88,25 @@ authRouter.get("/me", requireAuth, async(req, res) =>{
   );
   res.json({ user: result.rows[0] });
 })
+
+// TODO(me): Pour changer les infos du user
+authRouter.patch("/me", requireAuth, async (req, res) => {
+  const { bio, avatar_url } = req.body;
+
+  try {
+    const result = await pool.query(
+      `UPDATE users
+         SET bio = $1, avatar_url = $2
+       WHERE id = $3
+       RETURNING id, username, email, display_name, bio, avatar_url, created_at`,
+      [bio?.trim() || null, avatar_url?.trim() || null, req.userId]
+    );
+    res.json({ user: result.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "erreur serveur" });
+  }
+});
 
 
 // ----->ROUTE Mot de passe oublie

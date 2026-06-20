@@ -42,7 +42,9 @@ export default function Article() {
       )}
 
       <div className="mt-4 flex items-center gap-2 text-sm text-neutral-500">
-        <span>{review.author_name ?? review.author_username}</span>
+        <Link to={`/u/${review.author_username}`} className="hover:underline">
+          {review.author_name ?? review.author_username}
+        </Link>
         {review.rating != null && (
           <>
             <span>·</span>

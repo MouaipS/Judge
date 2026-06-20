@@ -7,6 +7,9 @@ import NewReview from "./pages/NewReview";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import Profile from "./pages/Profile";
+import EditProfile from "./pages/EditProfile";
+
 
 // dans <Routes> :
 
@@ -23,6 +26,9 @@ export default function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
 
+          <Route path="/u/:username" element={<Profile />} />
+          <Route path="/settings" element={<EditProfile />} />
+          
           <Route path="/reviews/:id" element={<Article />} />
           <Route path="/new" element={<NewReview />} />
         </Routes>
