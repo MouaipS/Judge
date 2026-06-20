@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { pool } from "../db.js";
+import { avatarUrl } from "../services/storage.js";
 
 export const usersRouter = Router();
 
@@ -33,7 +34,7 @@ usersRouter.get("/:username", async (req, res) => {
     );
 
     res.json({
-      user,
+      user: { ...user, avatar_url: avatarUrl(user.avatar_url) },
       reviews: reviewsResult.rows,
       review_count: reviewsResult.rowCount,
     });

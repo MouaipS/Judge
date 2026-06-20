@@ -4,6 +4,11 @@ import jwt from "jsonwebtoken";
 import { pool } from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
 import crypto from "node:crypto";
+import multer from "multer";
+import sharp from "sharp";
+import { uploadAvatar } from "../middleware/upload.js";
+import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { s3, AVATAR_BUCKET, avatarUrl } from "../services/storage.js";
 
 export const authRouter = Router();
 
@@ -23,7 +28,7 @@ authRouter.post("/register", async (req, res) => {
     const result = await pool.query(
       `INSERT INTO users (username, email, password_hash)
        VALUES ($1, $2, $3)
-       RETURNING id, username, email, created_at`,
+       RETURNING id, username, email, created_at, display_name, avatar_url`,
       [username, email, password_hash]
     );
 
@@ -51,7 +56,8 @@ authRouter.post("/login", async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT id, username, email, password_hash FROM users WHERE email = $1`,
+      `SELECT id, username, email, password_hash, display_name, avatar_url
+       FROM users WHERE email = $1`,
       [email]
     );
 
@@ -70,7 +76,12 @@ authRouter.post("/login", async (req, res) => {
     });
 
     res.json({
-      user: { id: user.id, username: user.username, email: user.email },
+      user: { 
+        id: user.id, 
+        username: user.username, 
+        email: user.email,
+        display_name: user.display_name,
+        avatar_url: avatarUrl(user.avatar_url), },
       token,
     });
   } catch (err) {
@@ -86,22 +97,22 @@ authRouter.get("/me", requireAuth, async(req, res) =>{
      FROM users WHERE id = $1`,
     [req.userId]
   );
-  res.json({ user: result.rows[0] });
+  const user = result.rows[0];
+  res.json({ user: { ...user, avatar_url: avatarUrl(user.avatar_url) } });
 })
 
 // TODO(me): Pour changer les infos du user
 authRouter.patch("/me", requireAuth, async (req, res) => {
-  const { bio, avatar_url } = req.body;
+  const { bio } = req.body;
 
   try {
     const result = await pool.query(
-      `UPDATE users
-         SET bio = $1, avatar_url = $2
-       WHERE id = $3
+      `UPDATE users SET bio = $1 WHERE id = $2
        RETURNING id, username, email, display_name, bio, avatar_url, created_at`,
-      [bio?.trim() || null, avatar_url?.trim() || null, req.userId]
+      [bio?.trim() || null, req.userId]
     );
-    res.json({ user: result.rows[0] });
+    const u = result.rows[0];
+    res.json({ user: { ...u, avatar_url: avatarUrl(u.avatar_url) } });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "erreur serveur" });
@@ -180,3 +191,76 @@ authRouter.post("/forgot-password", async (req, res) => {
     res.status(500).json({ error: "erreur serveur" });
   }
 });
+
+// -----> Prend le fichier image avatar en memoire puis le donne au sharp et met a jour la base 
+authRouter.post(
+  "/me/avatar",
+  requireAuth,
+  // -- adaptateur : on enrobe multer pour transformer ses erreurs en 400 JSON propres
+  (req, res, next) => {
+    uploadAvatar.single("avatar")(req, res, (err) => {
+      if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
+        return res.status(400).json({ error: "fichier trop volumineux (5 Mo max)" });
+      }
+      if (err) {
+        return res.status(400).json({ error: "format non supporté (jpeg, png, webp)" });
+      }
+      next();
+    });
+  },
+  // -- handler principal
+  async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ error: "aucun fichier reçu (champ 'avatar')" });
+    }
+
+    try {
+      // 1) Traitement image : carré 256x256, webp, orientation corrigée, EXIF strippé
+      const processed = await sharp(req.file.buffer)
+        .rotate()
+        .resize(256, 256, { fit: "cover" })
+        .webp({ quality: 82 })
+        .toBuffer();
+
+      // 2) Clé d'objet unique (un nouvel UUID à chaque upload)
+      const key = `avatars/${crypto.randomUUID()}.webp`;
+
+      // 3) Envoi au bucket
+      await s3.send(
+        new PutObjectCommand({
+          Bucket: AVATAR_BUCKET,
+          Key: key,
+          Body: processed,
+          ContentType: "image/webp",
+          CacheControl: "public, max-age=31536000, immutable",
+        })
+      );
+
+      // 4) On lit l'ancienne clé avant d'écraser, pour la supprimer ensuite
+      const prev = await pool.query(`SELECT avatar_url FROM users WHERE id = $1`, [
+        req.userId,
+      ]);
+      const oldKey: string | null = prev.rows[0]?.avatar_url ?? null;
+
+      // 5) Mise à jour en base : on stocke la CLÉ, pas l'URL
+      const result = await pool.query(
+        `UPDATE users SET avatar_url = $1 WHERE id = $2
+         RETURNING id, username, email, display_name, bio, avatar_url, created_at`,
+        [key, req.userId]
+      );
+
+      // 6) Nettoyage best-effort de l'ancien objet
+      if (oldKey && oldKey !== key) {
+        s3.send(new DeleteObjectCommand({ Bucket: AVATAR_BUCKET, Key: oldKey })).catch(
+          (e) => console.error("suppression ancien avatar échouée:", e)
+        );
+      }
+
+      const user = result.rows[0];
+      res.json({ user: { ...user, avatar_url: avatarUrl(user.avatar_url) } });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "erreur serveur" });
+    }
+  }
+); 
