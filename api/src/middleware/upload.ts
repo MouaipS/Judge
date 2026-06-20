@@ -2,7 +2,7 @@ import multer from "multer";
 
 // -----> Pour upload une image avatar -  
 // -----> memoryStorage pour stocker image sur la RAM pour etre traite et pas save direct sur le disque 
-// -----> limit de 5Mo et seulement jpeg png webp
+// -----> limit de 5Mo et seulement jpeg png webp mais base sur MIMETYPE
 export const uploadAvatar = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }, // 5 Mo
