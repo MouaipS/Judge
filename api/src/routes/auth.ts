@@ -216,12 +216,16 @@ authRouter.post(
 
     try {
       // 1) Traitement image : carré 256x256, webp, orientation corrigée, EXIF strippé
-      const processed = await sharp(req.file.buffer)
-        .rotate()
-        .resize(256, 256, { fit: "cover" })
-        .webp({ quality: 82 })
-        .toBuffer();
-
+      let processed: Buffer;
+      try {
+        processed = await sharp(req.file.buffer)
+          .rotate()
+          .resize(256, 256, { fit: "cover" })
+          .webp({ quality: 82 })
+          .toBuffer();
+      } catch {
+        return res.status(400).json({ error: "fichier image invalide ou corrompu" });
+      }
       // 2) Clé d'objet unique (un nouvel UUID à chaque upload)
       const key = `avatars/${crypto.randomUUID()}.webp`;
 
