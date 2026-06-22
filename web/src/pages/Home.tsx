@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { getFeed, type ReviewSummary } from "../api";
 import { useAuth } from "../auth";
 import Navbar from "../components/Navbar";
+import LikeButton from "../components/LikeButton";
 
 const IMG_BASE = "https://image.tmdb.org/t/p/w500";
 
@@ -92,12 +93,18 @@ export default function Home() {
             )}
             <p className="mt-3 text-sm text-neutral-500">
               <Link to={`/u/${lead.author_username}`} className="hover:underline">
-              {lead.author_name ?? lead.author_username}
+                {lead.author_name ?? lead.author_username}
               </Link>
               {lead.rating != null && ` · ${lead.rating}/10`}
             </p>
+            <div className="mt-2">
+              <LikeButton
+                reviewId={lead.id}
+                initialCount={lead.like_count}
+                initialLiked={lead.liked_by_me}
+              />
+            </div>
           </div>
-
           <aside className="border-l border-neutral-200 pl-6">
             <h3 className="text-xs uppercase tracking-wider text-neutral-400">
               Autres parutions
