@@ -103,9 +103,17 @@ const bubble = "rounded-full px-8 py-2.5 text-sm font-medium transition-colors";
 			        onClick={() => setMenuOpen((o) => !o)}
 			        className="flex items-center gap-2 rounded-full bg-white py-1.5 pl-1.5 pr-4 shadow-sm transition-colors hover:bg-neutral-100"
 			      >
-			        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-900 text-sm font-medium text-white">
-			          {(user.display_name ?? user.username).charAt(0).toUpperCase()}
-			        </span>
+			        {user.avatar_url ? (
+						  <img
+						    src={user.avatar_url}
+						    alt={user.username}
+						    className="h-9 w-9 rounded-full object-cover"
+						  />
+						) : (
+						  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-900 text-sm font-medium text-white">
+						    {(user.display_name ?? user.username).charAt(0).toUpperCase()}
+						  </span>
+						)}
 			        <span className="text-sm font-medium text-neutral-900">
 			          {user.display_name ?? user.username}
 			        </span>
@@ -146,12 +154,12 @@ const bubble = "rounded-full px-8 py-2.5 text-sm font-medium transition-colors";
 			            Écrire une critique
 			          </Link>
 					  <Link
-  to="/settings"
-  onClick={() => setMenuOpen(false)}
-  className="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100"
->
-  Éditer le profil
-</Link>
+						  to="/settings"
+						  onClick={() => setMenuOpen(false)}
+						  className="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100"
+						>
+						  Éditer le profil
+						</Link>
 			          <div className="my-1 border-t border-neutral-100" />
 			          <button
 			            onClick={() => {

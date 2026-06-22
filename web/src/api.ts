@@ -60,6 +60,7 @@ export interface User {
   username: string;
   email: string;
   display_name: string | null;
+  avatar_url: string | null;
 }
 
 export async function loginRequest(
@@ -194,10 +195,7 @@ export async function getProfile(username: string): Promise<AuthorProfile> {
 } 
 
 // -----> Pour changer les informations de l utilisateur 
-export async function updateProfile(input: {
-  bio: string | null;
-  avatar_url: string | null;
-}): Promise<void> {
+export async function updateProfile(input: { bio: string | null }): Promise<void> {
   const token = getToken();
   if (!token) throw new Error("Non connecté");
 
@@ -211,3 +209,24 @@ export async function updateProfile(input: {
   });
   if (!res.ok) throw new Error("échec de la mise à jour du profil");
 }
+
+// -----> Fonction pour upload image avatar
+export async function uploadAvatar(file: File): Promise<User> {
+  const token = getToken();
+  if (!token) throw new Error("Non connecté");
+
+  const form = new FormData();
+  form.append("avatar", file);
+
+  const res = await fetch(`${API_URL}/api/auth/me/avatar`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` }, // surtout PAS de Content-Type
+    body: form,
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new Error(data?.error ?? "échec de l'upload de l'avatar");
+  }
+  const data = await res.json();
+  return data.user;
+} 
