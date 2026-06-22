@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { getReview, type ReviewFull } from "../api";
+import LikeButton from "../components/LikeButton";
 
 const IMG_BASE = "https://image.tmdb.org/t/p/w780";
 
@@ -51,6 +52,12 @@ export default function Article() {
             <span className="font-medium text-neutral-900">{review.rating}/10</span>
           </>
         )}
+        <span>·</span>
+        <LikeButton
+          reviewId={review.id}
+          initialCount={review.like_count}
+          initialLiked={review.liked_by_me}
+        />
       </div>
 
       {cover && (

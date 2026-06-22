@@ -13,18 +13,19 @@ export interface ReviewSummary {
   movie_title: string;
   release_year: number | null;
   poster_path: string | null;
+  like_count: number;
+  liked_by_me: boolean;
 }
 
 export async function getFeed(): Promise<ReviewSummary[]> {
-  const res = await fetch(`${API_URL}/api/reviews`);
+  const token = getToken();
+  const res = await fetch(`${API_URL}/api/reviews`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
   if (!res.ok) throw new Error("échec du chargement du feed");
   const data = await res.json();
   return data.reviews;
 }
-
-
-///////////////////////////
-
 
 export interface ReviewFull extends ReviewSummary {
   body: string;
@@ -34,7 +35,10 @@ export interface ReviewFull extends ReviewSummary {
 }
 
 export async function getReview(id: string): Promise<ReviewFull> {
-  const res = await fetch(`${API_URL}/api/reviews/${id}`);
+  const token = getToken();
+  const res = await fetch(`${API_URL}/api/reviews/${id}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
   if (res.status === 404) throw new Error("Critique introuvable");
   if (!res.ok) throw new Error("échec du chargement");
   const data = await res.json();
@@ -230,3 +234,26 @@ export async function uploadAvatar(file: File): Promise<User> {
   const data = await res.json();
   return data.user;
 } 
+
+// -----> Like et unlike d une critique
+export async function likeReview(id: string): Promise<{ liked: boolean; like_count: number }> {
+  const token = getToken();
+  if (!token) throw new Error("Non connecté");
+  const res = await fetch(`${API_URL}/api/reviews/${id}/like`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("échec du like");
+  return res.json();
+}
+
+export async function unlikeReview(id: string): Promise<{ liked: boolean; like_count: number }> {
+  const token = getToken();
+  if (!token) throw new Error("Non connecté");
+  const res = await fetch(`${API_URL}/api/reviews/${id}/like`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("échec du unlike");
+  return res.json();
+}
