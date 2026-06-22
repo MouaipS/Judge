@@ -4,15 +4,19 @@ import { useAuth } from "../auth";
 import { getProfile, updateProfile, uploadAvatar } from "../api";
 import Navbar from "../components/Navbar";
 
+const MAX_AVATAR_BYTES = 5 * 1024 * 1024; // 5 Mo, comme multer
+const ALLOWED_AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
 export default function EditProfile() {
   const { user, loading, setUser } = useAuth();
   const navigate = useNavigate();
 
   const [bio, setBio] = useState("");
-  const [avatar, setAvatar] = useState("");          // URL affichée (serveur ou aperçu local)
+  const [serverAvatar, setServerAvatar] = useState("");        // avatar côté serveur
+  const [avatarFile, setAvatarFile] = useState<File | null>(null); // fichier en attente d'envoi
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null); // aperçu local
   const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);       // sauvegarde de la bio
-  const [uploading, setUploading] = useState(false); // upload de l'avatar
+  const [saving, setSaving] = useState(false);                 // un seul état : avatar + bio
   const [ready, setReady] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -25,48 +29,65 @@ export default function EditProfile() {
     getProfile(user.username)
       .then((p) => {
         setBio(p.user.bio ?? "");
-        setAvatar(p.user.avatar_url ?? "");
+        setServerAvatar(p.user.avatar_url ?? "");
       })
       .catch((e) => setError(e.message))
       .finally(() => setReady(true));
   }, [user]);
 
+  // Génère un aperçu local quand un fichier est choisi, et le révoque tout seul.
+  useEffect(() => {
+    if (!avatarFile) {
+      setPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(avatarFile);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [avatarFile]);
+
   if (loading || !user) return null;
 
-  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const avatar = previewUrl ?? serverAvatar;
 
-    setError(null);
-    setUploading(true);
+function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const file = e.target.files?.[0];
+  if (!file) return;
 
-    // Aperçu local instantané, le temps de l'aller-retour réseau
-    const localPreview = URL.createObjectURL(file);
-    setAvatar(localPreview);
-
-    try {
-      const updated = await uploadAvatar(file);
-      setUser(updated);                    // user global à jour (navbar, etc.)
-      setAvatar(updated.avatar_url ?? "");
-    } catch (err: any) {
-      setError(err.message);
-      setAvatar(user.avatar_url ?? "");    // échec → on revient à l'avatar courant
-    } finally {
-      URL.revokeObjectURL(localPreview);   // libère l'aperçu
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = ""; // re-sélection du même fichier possible
-    }
+  // Validation côté client, alignée sur le serveur
+  if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
+    setError("Format non supporté : choisis un JPEG, PNG ou WebP.");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    return;
+  }
+  if (file.size > MAX_AVATAR_BYTES) {
+    setError("Image trop lourde : 5 Mo maximum.");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    return;
   }
 
-  async function handleSaveBio() {
+  setError(null);
+  setAvatarFile(file);                                  // on mémorise, on n'upload PAS
+  if (fileInputRef.current) fileInputRef.current.value = ""; // re-sélection du même fichier possible
+}
+
+  async function handleSave() {
     setSaving(true);
     setError(null);
     try {
+      // 1) Si un nouvel avatar a été choisi, on l'envoie maintenant
+      if (avatarFile) {
+        const updated = await uploadAvatar(avatarFile);
+        setUser(updated);                            // user global à jour (navbar, etc.)
+        setServerAvatar(updated.avatar_url ?? "");   // le state reflète l'avatar persisté
+        setAvatarFile(null);                         // consommé → pas de ré-upload au prochain clic
+      }
+      // 2) Mise à jour de la bio
       await updateProfile({ bio: bio.trim() || null });
       navigate(`/u/${user.username}`);
     } catch (e: any) {
       setError(e.message);
-      setSaving(false);
+      setSaving(false);                    // on reste sur la page pour corriger
     }
   }
 
@@ -103,11 +124,11 @@ export default function EditProfile() {
                   onChange={handleAvatarChange}
                   className="hidden"
                 />
-                <label
+               <label
                   htmlFor="avatar-input"
                   className="cursor-pointer self-start rounded-md border border-neutral-300 px-4 py-2 text-sm hover:bg-neutral-50"
                 >
-                  {uploading ? "Envoi…" : "Changer l'avatar"}
+                  Changer l'avatar
                 </label>
                 <span className="text-xs text-neutral-500">
                   JPEG, PNG ou WebP · 5 Mo max
@@ -130,7 +151,7 @@ export default function EditProfile() {
             {error && <p className="text-sm text-red-600">{error}</p>}
 
             <button
-              onClick={handleSaveBio}
+              onClick={handleSave}
               disabled={saving}
               className="self-start rounded-md bg-neutral-900 px-5 py-2 text-white hover:bg-neutral-700 disabled:opacity-50"
             >
