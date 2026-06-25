@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { pool } from "../db.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuth, optionalAuth } from "../middleware/auth.js";
 import { fetchMovie } from "../services/tmdb.js";
 
 export const reviewsRouter = Router();
@@ -77,7 +77,7 @@ reviewsRouter.get("/", async (req, res) => {
   }
 });
 
-reviewsRouter.get("/:id", async (req, res) => {
+reviewsRouter.get("/:id", optionalAuth, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT
@@ -89,8 +89,9 @@ reviewsRouter.get("/:id", async (req, res) => {
        FROM reviews r
        JOIN users u  ON u.id = r.author_id
        JOIN movies m ON m.tmdb_id = r.tmdb_id
-       WHERE r.id = $1`,
-      [req.params.id]
+       WHERE r.id = $1
+         AND (r.published_at IS NOT NULL OR r.author_id = $2)`,
+      [req.params.id, req.userId ?? null]
     );
 
     const review = result.rows[0];
@@ -99,6 +100,9 @@ reviewsRouter.get("/:id", async (req, res) => {
     }
     res.json({ review });
   } catch (err) {
+    if ((err as any).code === '22P02') {
+      return res.status(404).json({ error: 'Review not found' });
+    }
     console.error(err);
     res.status(500).json({ error: "erreur serveur" });
   }

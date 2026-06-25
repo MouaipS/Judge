@@ -165,30 +165,40 @@ authRouter.post("/forgot-password", async (req, res) => {
     return res.status(400).json({ error: "mot de passe trop court (8 min)" });
   }
 
+  const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+  const client = await pool.connect();
   try {
-    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
-    const result = await pool.query(
+    await client.query("BEGIN");
+
+    const result = await client.query(
       `SELECT user_id FROM password_reset_tokens
        WHERE token_hash = $1 AND used_at IS NULL AND expires_at > now()`,
       [tokenHash]
     );
     const row = result.rows[0];
-    if (!row) return res.status(400).json({ error: "lien invalide ou expiré" });
+    if (!row) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ error: "lien invalide ou expiré" });
+    }
 
     const password_hash = await bcrypt.hash(password, 12);
-    await pool.query(`UPDATE users SET password_hash = $1 WHERE id = $2`, [
+    await client.query(`UPDATE users SET password_hash = $1 WHERE id = $2`, [
       password_hash,
       row.user_id,
     ]);
-    await pool.query(
+    await client.query(
       `UPDATE password_reset_tokens SET used_at = now() WHERE token_hash = $1`,
       [tokenHash]
     );
 
+    await client.query("COMMIT");
     res.json({ message: "Mot de passe mis à jour." });
   } catch (err) {
+    await client.query("ROLLBACK");
     console.error(err);
     res.status(500).json({ error: "erreur serveur" });
+  } finally {
+    client.release();
   }
 });
 
