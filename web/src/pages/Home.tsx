@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { getFeed, getFollowingFeed, type ReviewSummary } from "../api";
 import { useAuth } from "../auth";
 import Navbar from "../components/Navbar";
+import MovieBanner from "../components/MovieBanner";
 
 const IMG_BASE = "https://image.tmdb.org/t/p/w500";
 
@@ -28,9 +29,14 @@ export default function Home() {
   const lead = reviews[0];
   const rest = reviews.slice(1);
 
+  const bannerPosters = reviews
+    .filter((r) => r.poster_path !== null)
+    .map((r) => ({ path: r.poster_path as string, title: r.movie_title }));
+
   return (
     <>
       <Navbar />
+      <MovieBanner posters={bannerPosters} />
       <div className="mx-auto max-w-5xl px-6 py-8 font-sans text-neutral-900">
         {user && (
           <div className="mb-6 flex gap-2">

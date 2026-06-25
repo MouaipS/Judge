@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth";
 import { searchMovies, createReview, type MovieResult } from "../api";
+import { similarity } from "../utils/levenshtein";
 
 const IMG_BASE = "https://image.tmdb.org/t/p/w92";
 
@@ -33,7 +34,11 @@ export default function NewReview() {
   async function handleSearch() {
     if (query.trim().length === 0) return;
     try {
-      setResults(await searchMovies(query));
+      const raw = await searchMovies(query);
+      const sorted = raw.slice().sort(
+        (a, b) => similarity(query, b.title) - similarity(query, a.title)
+      );
+      setResults(sorted);
     } catch (e: any) {
       setError(e.message);
     }
@@ -108,7 +113,7 @@ export default function NewReview() {
         <div className="mt-6 flex flex-col gap-3">
           <p className="text-sm text-neutral-500">
             Film : <strong>{selected.title}</strong>{" "}
-            <button onClick={() => setSelected(null)} className="text-blue-700 hover:underline">
+            <button onClick={() => setSelected(null)} className="text-neutral-900 hover:underline">
               changer
             </button>
           </p>
