@@ -229,4 +229,15 @@ export async function uploadAvatar(file: File): Promise<User> {
   }
   const data = await res.json();
   return data.user;
-} 
+}
+
+export async function getFollowingFeed(): Promise<ReviewSummary[]> {
+  const token = getToken();
+  if (!token) return [];
+  const res = await fetch(`${API_URL}/api/reviews/following`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("échec du chargement du feed abonnements");
+  const data = await res.json();
+  return data.reviews;
+}
