@@ -9,6 +9,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
+import FollowList from "./pages/FollowList";
 
 
 // dans <Routes> :
@@ -27,6 +28,8 @@ export default function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
 
           <Route path="/u/:username" element={<Profile />} />
+          <Route path="/u/:username/followers" element={<FollowList mode="followers" />} />
+          <Route path="/u/:username/following" element={<FollowList mode="following" />} />
           <Route path="/settings" element={<EditProfile />} />
           
           <Route path="/reviews/:id" element={<Article />} />

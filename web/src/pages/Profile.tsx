@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { getProfile, type AuthorProfile } from "../api";
+import { getProfile, followUser, unfollowUser, type AuthorProfile } from "../api";
 import Navbar from "../components/Navbar";
 import { useAuth } from "../auth";
 
@@ -23,18 +23,43 @@ export default function Profile() {
   const [profile, setProfile] = useState<AuthorProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followLoading, setFollowLoading] = useState(false);
 
   useEffect(() => {
     if (!username) return;
     setLoading(true);
     getProfile(username)
-      .then(setProfile)
+      .then((p) => {
+        setProfile(p);
+        setIsFollowing(p.user.is_following);
+        setFollowerCount(p.user.follower_count);
+      })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [username]);
 
   const { user } = useAuth();
-const isOwnProfile = !!user && !!profile && user.username === profile.user.username;
+  const isOwnProfile = !!user && !!profile && user.username === profile.user.username;
+
+  async function handleFollow() {
+    if (!user || !username || followLoading) return;
+    setFollowLoading(true);
+    try {
+      if (isFollowing) {
+        await unfollowUser(username);
+        setIsFollowing(false);
+        setFollowerCount((c) => c - 1);
+      } else {
+        await followUser(username);
+        setIsFollowing(true);
+        setFollowerCount((c) => c + 1);
+      }
+    } finally {
+      setFollowLoading(false);
+    }
+  }
 
 
   return (
@@ -71,11 +96,33 @@ const isOwnProfile = !!user && !!profile && user.username === profile.user.usern
                   @{profile.user.username} · {profile.review_count}{" "}
                   {profile.review_count > 1 ? "critiques" : "critique"}
                 </p>
-				{isOwnProfile && (
-    <Link to="/settings" className="mt-1 inline-block text-sm text-blue-700 hover:underline">
-      Éditer le profil
-    </Link>
-  )}
+                <p className="mt-1 flex gap-3 text-sm text-neutral-500">
+                  <Link to={`/u/${profile.user.username}/followers`} className="hover:underline">
+                    <span className="font-medium text-neutral-900">{followerCount}</span> abonnés
+                  </Link>
+                  <Link to={`/u/${profile.user.username}/following`} className="hover:underline">
+                    <span className="font-medium text-neutral-900">{profile.user.following_count}</span> abonnements
+                  </Link>
+                </p>
+                {isOwnProfile && (
+                  <Link to="/settings" className="mt-1 inline-block text-sm text-neutral-900 hover:underline">
+                    Éditer le profil
+                  </Link>
+                )}
+                {!isOwnProfile && user && (
+                  <button
+                    type="button"
+                    onClick={handleFollow}
+                    disabled={followLoading}
+                    className={`mt-3 rounded-full px-5 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 ${
+                      isFollowing
+                        ? "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
+                        : "bg-neutral-900 text-white hover:bg-neutral-700"
+                    }`}
+                  >
+                    {isFollowing ? "Abonné" : "Suivre"}
+                  </button>
+                )}
                 {profile.user.bio && (
                   <p className="mt-3 max-w-xl text-sm text-neutral-700">
                     {profile.user.bio}

@@ -182,9 +182,20 @@ export interface AuthorProfile {
     bio: string | null;
     avatar_url: string | null;
     created_at: string;
+    follower_count: number;
+    following_count: number;
+    is_following: boolean;
   };
   reviews: ProfileReview[];
   review_count: number;
+}
+
+export interface UserSummary {
+  username: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+  followed_at: string;
 }
 
 export async function getProfile(username: string): Promise<AuthorProfile> {
@@ -229,6 +240,40 @@ export async function uploadAvatar(file: File): Promise<User> {
   }
   const data = await res.json();
   return data.user;
+}
+
+export async function followUser(username: string): Promise<void> {
+  const token = getToken();
+  if (!token) throw new Error("Non connecté");
+  const res = await fetch(`${API_URL}/api/users/${encodeURIComponent(username)}/follow`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok && res.status !== 409) throw new Error("échec du suivi");
+}
+
+export async function unfollowUser(username: string): Promise<void> {
+  const token = getToken();
+  if (!token) throw new Error("Non connecté");
+  const res = await fetch(`${API_URL}/api/users/${encodeURIComponent(username)}/follow`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("échec du désabonnement");
+}
+
+export async function getFollowers(username: string): Promise<UserSummary[]> {
+  const res = await fetch(`${API_URL}/api/users/${encodeURIComponent(username)}/followers`);
+  if (!res.ok) throw new Error("échec du chargement des abonnés");
+  const data = await res.json();
+  return data.followers;
+}
+
+export async function getFollowing(username: string): Promise<UserSummary[]> {
+  const res = await fetch(`${API_URL}/api/users/${encodeURIComponent(username)}/following`);
+  if (!res.ok) throw new Error("échec du chargement des abonnements");
+  const data = await res.json();
+  return data.following;
 }
 
 export async function getFollowingFeed(): Promise<ReviewSummary[]> {
